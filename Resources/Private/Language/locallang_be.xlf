@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+    <file source-language="en" datatype="plaintext">
+        <header/>
+        <body>
+            <trans-unit id="pageModule.header">
+                <source>View Statistics</source>
+            </trans-unit>
+            <trans-unit id="statistics.total">
+                <source>Total</source>
+            </trans-unit>
+            <trans-unit id="statistics.last7days">
+                <source>Last 7 days</source>
+            </trans-unit>
+            <trans-unit id="statistics.last30days">
+                <source>Last 30 days</source>
+            </trans-unit>
+            <trans-unit id="statistics.last12months">
+                <source>Last 12 months</source>
+            </trans-unit>
+            <trans-unit id="statistics.byPageType">
+                <source>By Page Type</source>
+            </trans-unit>
+            <trans-unit id="statistics.pageType">
+                <source>Type</source>
+            </trans-unit>
+            <trans-unit id="widget.group.viewtracker">
+                <source>View Tracker</source>
+            </trans-unit>
+            <trans-unit id="day.monday">
+                <source>Mon</source>
+            </trans-unit>
+            <trans-unit id="day.tuesday">
+                <source>Tue</source>
+            </trans-unit>
+            <trans-unit id="day.wednesday">
+                <source>Wed</source>
+            </trans-unit>
+            <trans-unit id="day.thursday">
+                <source>Thu</source>
+            </trans-unit>
+            <trans-unit id="day.friday">
+                <source>Fri</source>
+            </trans-unit>
+            <trans-unit id="day.saturday">
+                <source>Sat</source>
+            </trans-unit>
+            <trans-unit id="day.sunday">
+                <source>Sun</source>
+            </trans-unit>
+        </body>
+    </file>
+</xliff>

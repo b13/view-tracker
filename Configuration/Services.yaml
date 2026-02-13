@@ -1,0 +1,15 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+    public: false
+
+  B13\ViewTracker\:
+    resource: ../Classes/*
+    exclude: ../Classes/{DTO,Event}/*
+
+  b13viewTracker.storage:
+    class: B13\ViewTracker\Storage\DatabaseStorage
+
+  B13\ViewTracker\Storage\StorageInterface:
+    alias: b13viewTracker.storage
