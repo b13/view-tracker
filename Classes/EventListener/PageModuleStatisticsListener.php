@@ -59,9 +59,6 @@ final class PageModuleStatisticsListener
 
     public function __invoke(ModifyPageLayoutContentEvent $event): void
     {
-        if (class_exists(\B13\PageInfoTabs\Event\CollectPageInfoSectionsEvent::class)) {
-            return;
-        }
         $id = (int)($event->getRequest()->getQueryParams()['id'] ?? 0);
         if ($id > 0) {
             $pageRecord = BackendUtility::getRecord('pages', $id);
