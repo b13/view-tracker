@@ -12,6 +12,8 @@ declare(strict_types=1);
 
 namespace B13\ViewTracker\EventListener;
 
+use B13\PageInfoTabs\Event\CollectPageInfoSectionsEvent;
+use B13\PageInfoTabs\Model\Section;
 use B13\ViewTracker\Configuration\ExtensionConfiguration;
 use B13\ViewTracker\DTO\LastSevenDaysPeriod;
 use B13\ViewTracker\DTO\LastThirtyDaysPeriod;
@@ -19,7 +21,6 @@ use B13\ViewTracker\DTO\LastTwelveMonthsPeriod;
 use B13\ViewTracker\DTO\PeriodInterface;
 use B13\ViewTracker\Service\StatisticsService;
 use Doctrine\DBAL\ParameterType;
-use TYPO3\CMS\Backend\Controller\Event\ModifyPageLayoutContentEvent;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Attribute\AsEventListener;
 use TYPO3\CMS\Core\Database\ConnectionPool;
@@ -36,9 +37,9 @@ use TYPO3\CMS\Fluid\View\FluidViewAdapter;
 use TYPO3\CMS\Fluid\View\TemplatePaths;
 
 #[AsEventListener(
-    identifier: 'my-extension/backend/modify-page-module-content',
+    identifier: 'b13/view-tracker/page-info-tabs-section',
 )]
-final class PageModuleStatisticsListener
+final class PageInfoTabsSectionProvider
 {
     private readonly Locale $locale;
 
@@ -57,64 +58,69 @@ final class PageModuleStatisticsListener
         }
     }
 
-    public function __invoke(ModifyPageLayoutContentEvent $event): void
+    public function __invoke(CollectPageInfoSectionsEvent $event): void
     {
-        if (class_exists(\B13\PageInfoTabs\Event\CollectPageInfoSectionsEvent::class)) {
+        $id = (int)($event->getRequest()->getQueryParams()['id'] ?? 0);
+        if ($id <= 0) {
             return;
         }
-        $id = (int)($event->getRequest()->getQueryParams()['id'] ?? 0);
-        if ($id > 0) {
-            $pageRecord = BackendUtility::getRecord('pages', $id);
-            if (!$pageRecord || $this->extensionConfiguration->isDoktypeExcluded($pageRecord)) {
-                return;
-            }
 
-            $this->pageRenderer->loadJavaScriptModule('@b13/view-tracker/main.js');
-            /** @var Site $site */
-            $site = $event->getRequest()->getAttribute('site');
-            $languages = $this->getPageIdsForAllLanguages($id, $site->getLanguages());
+        $pageRecord = BackendUtility::getRecord('pages', $id);
+        if (!$pageRecord || $this->extensionConfiguration->isDoktypeExcluded($pageRecord)) {
+            return;
+        }
 
-            $view = $this->viewFactory->create(new ViewFactoryData());
-            if (!$view instanceof FluidViewAdapter) {
-                return;
-            }
-            $templatePaths = new TemplatePaths();
-            $templatePaths->setTemplateRootPaths(['EXT:view_tracker/Resources/Private/Templates/PageModule']);
-            $view->getRenderingContext()->setTemplatePaths($templatePaths);
+        $this->pageRenderer->loadJavaScriptModule('@b13/view-tracker/main.js');
 
-            $dataSets = [
-                [
-                    'label' => LocalizationUtility::translate('LLL:EXT:view_tracker/Resources/Private/Language/locallang_be.xlf:statistics.total'),
-                    'type' => 'percentage',
-                    'data' => $this->getTotalViews($languages),
-                ],
-            ];
-            $dataSets[] = [
+        /** @var Site $site */
+        $site = $event->getRequest()->getAttribute('site');
+        $languages = $this->getPageIdsForAllLanguages($id, $site->getLanguages());
+
+        $view = $this->viewFactory->create(new ViewFactoryData());
+        if (!$view instanceof FluidViewAdapter) {
+            return;
+        }
+        $templatePaths = new TemplatePaths();
+        $templatePaths->setTemplateRootPaths(['EXT:view_tracker/Resources/Private/Templates/PageModule']);
+        $view->getRenderingContext()->setTemplatePaths($templatePaths);
+
+        $dataSets = [
+            [
+                'label' => LocalizationUtility::translate('LLL:EXT:view_tracker/Resources/Private/Language/locallang_be.xlf:statistics.total'),
+                'type' => 'percentage',
+                'data' => $this->getTotalViews($languages),
+            ],
+            [
                 'label' => LocalizationUtility::translate('LLL:EXT:view_tracker/Resources/Private/Language/locallang_be.xlf:statistics.last7days'),
                 'type' => 'axis-mixed',
                 'data' => $this->getViewsForPeriod($languages, new LastSevenDaysPeriod($this->locale)),
-            ];
-            $dataSets[] = [
+            ],
+            [
                 'label' => LocalizationUtility::translate('LLL:EXT:view_tracker/Resources/Private/Language/locallang_be.xlf:statistics.last30days'),
                 'type' => 'axis-mixed',
                 'data' => $this->getViewsForPeriod($languages, new LastThirtyDaysPeriod($this->locale)),
-            ];
-            $dataSets[] = [
+            ],
+            [
                 'label' => LocalizationUtility::translate('LLL:EXT:view_tracker/Resources/Private/Language/locallang_be.xlf:statistics.last12months'),
                 'type' => 'axis-mixed',
                 'data' => $this->getViewsForPeriod($languages, new LastTwelveMonthsPeriod($this->locale)),
-            ];
-            $dataSets[] = [
+            ],
+            [
                 'label' => LocalizationUtility::translate('LLL:EXT:view_tracker/Resources/Private/Language/locallang_be.xlf:statistics.byPageType'),
                 'type' => 'bar',
                 'data' => $this->getViewsByPageType($languages),
-            ];
-            $view->assignMultiple([
-                'dataSets' => $dataSets,
-            ]);
+            ],
+        ];
+        $view->assignMultiple([
+            'dataSets' => $dataSets,
+        ]);
 
-            $event->addHeaderContent($view->render('Header'));
-        }
+        $event->addSection(new Section(
+            identifier: 'view-tracker',
+            label: 'Page Views',
+            content: $view->render('Header'),
+            priority: 20,
+        ));
     }
 
     protected function getPageIdsForAllLanguages(int $pageId, array $languages): array
@@ -196,7 +202,7 @@ final class PageModuleStatisticsListener
 
         return [
             'labels' => $period->getLabels(),
-            'datasets' => array_values($dataSets), // remove keys to force a JS array instead of an object
+            'datasets' => array_values($dataSets),
         ];
     }
 
