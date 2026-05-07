@@ -52,6 +52,6 @@ final class PixelViewHelper extends AbstractViewHelper
         if ($type) {
             $src .= '&amp;type=' . $type;
         }
-        return '<img src="' . $src . '" style="position: fixed; z-index: -1000;" alt="" width="1" height="1" loading="eager">';
+        return '<img src="' . $src . '" style="position: fixed; z-index: -1000;" alt="" role="presentation" width="1" height="1" loading="eager">';
     }
 }
