@@ -19,9 +19,12 @@ use B13\ViewTracker\DTO\LastTwelveMonthsPeriod;
 use B13\ViewTracker\DTO\PeriodInterface;
 use B13\ViewTracker\Service\StatisticsService;
 use Doctrine\DBAL\ParameterType;
+use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Backend\Controller\Event\ModifyPageLayoutContentEvent;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Attribute\AsEventListener;
+use TYPO3\CMS\Core\Context\Context;
+use TYPO3\CMS\Core\Context\UserAspect;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Localization\Locale;
 use TYPO3\CMS\Core\Localization\Locales;
@@ -48,6 +51,7 @@ final class PageModuleStatisticsListener
         private readonly StatisticsService $statisticsService,
         private readonly ViewFactoryInterface $viewFactory,
         private readonly ExtensionConfiguration $extensionConfiguration,
+        private readonly Context $context,
     ) {
         $user = $GLOBALS['BE_USER'];
         if ($user->user['lang'] ?? false) {
@@ -59,6 +63,10 @@ final class PageModuleStatisticsListener
 
     public function __invoke(ModifyPageLayoutContentEvent $event): void
     {
+        if (!$this->isVisibleToCurrentUser($event->getRequest())) {
+            return;
+        }
+
         $id = (int)($event->getRequest()->getQueryParams()['id'] ?? 0);
         if ($id > 0) {
             $pageRecord = BackendUtility::getRecord('pages', $id);
@@ -112,6 +120,47 @@ final class PageModuleStatisticsListener
 
             $event->addHeaderContent($view->render('Header'));
         }
+    }
+
+    /**
+     * Gate the widget by BE user role + site setting. Admins always see it.
+     * Defaults preserve backwards compatibility: every non-admin sees it.
+     */
+    private function isVisibleToCurrentUser(ServerRequestInterface $request): bool
+    {
+        $userAspect = $this->context->getAspect('backend.user');
+        if (!$userAspect instanceof UserAspect || !$userAspect->isLoggedIn()) {
+            return false;
+        }
+        if ($userAspect->isAdmin()) {
+            return true;
+        }
+
+        $site = $request->getAttribute('site');
+        if (!$site instanceof Site) {
+            // No site context (rare in the Page module) — fall back to hidden.
+            return false;
+        }
+        $settings = $site->getSettings();
+
+        if ((bool)$settings->get('view_tracker.pageModuleStatistics.visibleForAdminsOnly', false)) {
+            return false;
+        }
+
+        $visibleForGroups = (string)$settings->get('view_tracker.pageModuleStatistics.visibleForGroups', '');
+        if ($visibleForGroups === '') {
+            return true;
+        }
+
+        $allowedGroupIds = array_filter(array_map(
+            'intval',
+            array_map('trim', explode(',', $visibleForGroups))
+        ));
+        if ($allowedGroupIds === []) {
+            return true;
+        }
+
+        return array_intersect($allowedGroupIds, $userAspect->getGroupIds()) !== [];
     }
 
     protected function getPageIdsForAllLanguages(int $pageId, array $languages): array

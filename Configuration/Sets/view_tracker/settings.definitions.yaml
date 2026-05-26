@@ -1,0 +1,9 @@
+settings:
+  view_tracker.pageModuleStatistics.visibleForAdminsOnly:
+    type: bool
+    default: false
+    label: 'Restrict the view-tracker statistics widget in the Page module to admin users only. When true, the widget is hidden for every non-admin regardless of the visibleForGroups setting.'
+  view_tracker.pageModuleStatistics.visibleForGroups:
+    type: string
+    default: ''
+    label: 'Comma-separated BE user group UIDs that may see the view-tracker statistics widget in the Page module. Empty (default) means no group restriction — every non-admin sees it. Ignored when visibleForAdminsOnly is true. Admins always see the widget.'
