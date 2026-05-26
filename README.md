@@ -52,6 +52,39 @@ shortcuts, external links, etc.). You can extend the exclusion list:
 $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['view_tracker']['excludedDoktypes'][] = 116;
 ```
 
+### Page-module statistics visibility
+
+By default every backend user that can open the Page module sees the
+statistics widget. Two site settings narrow that audience. Admins always
+see the widget regardless of these settings.
+
+Import the site set in your `config/sites/<id>/config.yaml`:
+
+```yaml
+dependencies:
+  - b13/view-tracker
+```
+
+Then override in `config/sites/<id>/settings.yaml`:
+
+```yaml
+view_tracker:
+  pageModuleStatistics:
+    # Restrict to admin users only — every non-admin loses the widget.
+    visibleForAdminsOnly: true
+    # OR keep visibleForAdminsOnly: false and limit by BE user group UIDs.
+    # Empty (default) means no group restriction.
+    visibleForGroups: '12,17'
+```
+
+Behaviour matrix (non-admin users):
+
+| `visibleForAdminsOnly` | `visibleForGroups` | Non-admin sees widget? |
+|---|---|---|
+| `false` (default) | empty (default) | yes — backwards-compatible |
+| `false` | `'12,17'` | only if member of group 12 or 17 |
+| `true` | (ignored) | never |
+
 ### Storage Type
 
 By default, views are written to the `tx_view_tracker_count` database table.

@@ -19,9 +19,11 @@ use B13\ViewTracker\DTO\LastTwelveMonthsPeriod;
 use B13\ViewTracker\DTO\PeriodInterface;
 use B13\ViewTracker\Service\StatisticsService;
 use Doctrine\DBAL\ParameterType;
+use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Backend\Controller\Event\ModifyPageLayoutContentEvent;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Attribute\AsEventListener;
+use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Localization\Locale;
 use TYPO3\CMS\Core\Localization\Locales;
@@ -59,6 +61,10 @@ final class PageModuleStatisticsListener
 
     public function __invoke(ModifyPageLayoutContentEvent $event): void
     {
+        if (!$this->isVisibleToCurrentUser($event->getRequest())) {
+            return;
+        }
+
         $id = (int)($event->getRequest()->getQueryParams()['id'] ?? 0);
         if ($id > 0) {
             $pageRecord = BackendUtility::getRecord('pages', $id);
@@ -112,6 +118,52 @@ final class PageModuleStatisticsListener
 
             $event->addHeaderContent($view->render('Header'));
         }
+    }
+
+    /**
+     * Gate the widget by BE user role + site setting. Admins always see it.
+     * Defaults preserve backwards compatibility: every non-admin sees it.
+     */
+    private function isVisibleToCurrentUser(ServerRequestInterface $request): bool
+    {
+        $beUser = $GLOBALS['BE_USER'] ?? null;
+        if (!$beUser instanceof BackendUserAuthentication) {
+            return false;
+        }
+        if ($beUser->isAdmin()) {
+            return true;
+        }
+
+        $site = $request->getAttribute('site');
+        if (!$site instanceof Site) {
+            // No site context (rare in the Page module) — fall back to visible.
+            return true;
+        }
+        $settings = $site->getSettings();
+
+        if ((bool)$settings->get('view_tracker.pageModuleStatistics.visibleForAdminsOnly', false)) {
+            return false;
+        }
+
+        $visibleForGroups = (string)$settings->get('view_tracker.pageModuleStatistics.visibleForGroups', '');
+        if ($visibleForGroups === '') {
+            return true;
+        }
+
+        $allowedGroupIds = array_filter(array_map(
+            'intval',
+            array_map('trim', explode(',', $visibleForGroups))
+        ));
+        if ($allowedGroupIds === []) {
+            return true;
+        }
+
+        $userGroupIds = array_map(
+            static fn(array $group): int => (int)($group['uid'] ?? 0),
+            $beUser->userGroups ?? []
+        );
+
+        return array_intersect($allowedGroupIds, $userGroupIds) !== [];
     }
 
     protected function getPageIdsForAllLanguages(int $pageId, array $languages): array
