@@ -138,8 +138,8 @@ final class PageModuleStatisticsListener
 
         $site = $request->getAttribute('site');
         if (!$site instanceof Site) {
-            // No site context (rare in the Page module) — fall back to visible.
-            return true;
+            // No site context (rare in the Page module) — fall back to hidden.
+            return false;
         }
         $settings = $site->getSettings();
 
