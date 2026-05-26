@@ -23,7 +23,8 @@ use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Backend\Controller\Event\ModifyPageLayoutContentEvent;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Attribute\AsEventListener;
-use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
+use TYPO3\CMS\Core\Context\Context;
+use TYPO3\CMS\Core\Context\UserAspect;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Localization\Locale;
 use TYPO3\CMS\Core\Localization\Locales;
@@ -50,6 +51,7 @@ final class PageModuleStatisticsListener
         private readonly StatisticsService $statisticsService,
         private readonly ViewFactoryInterface $viewFactory,
         private readonly ExtensionConfiguration $extensionConfiguration,
+        private readonly Context $context,
     ) {
         $user = $GLOBALS['BE_USER'];
         if ($user->user['lang'] ?? false) {
@@ -126,11 +128,11 @@ final class PageModuleStatisticsListener
      */
     private function isVisibleToCurrentUser(ServerRequestInterface $request): bool
     {
-        $beUser = $GLOBALS['BE_USER'] ?? null;
-        if (!$beUser instanceof BackendUserAuthentication) {
+        $userAspect = $this->context->getAspect('backend.user');
+        if (!$userAspect instanceof UserAspect || !$userAspect->isLoggedIn()) {
             return false;
         }
-        if ($beUser->isAdmin()) {
+        if ($userAspect->isAdmin()) {
             return true;
         }
 
@@ -158,12 +160,7 @@ final class PageModuleStatisticsListener
             return true;
         }
 
-        $userGroupIds = array_map(
-            static fn(array $group): int => (int)($group['uid'] ?? 0),
-            $beUser->userGroups ?? []
-        );
-
-        return array_intersect($allowedGroupIds, $userGroupIds) !== [];
+        return array_intersect($allowedGroupIds, $userAspect->getGroupIds()) !== [];
     }
 
     protected function getPageIdsForAllLanguages(int $pageId, array $languages): array
