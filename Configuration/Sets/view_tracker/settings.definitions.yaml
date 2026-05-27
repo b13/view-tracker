@@ -1,4 +1,8 @@
 settings:
+  view_tracker.endpoint:
+    type: string
+    default: '/_b13vt'
+    label: 'URL path the tracking middleware listens on and the PixelViewHelper emits. Must start with a slash. Override if a tracker blocklist (EasyPrivacy etc.) starts catching the default.'
   view_tracker.pageModuleStatistics.visibleForAdminsOnly:
     type: bool
     default: false
