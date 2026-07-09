@@ -1,7 +1,7 @@
 {
 	"name": "b13/view-tracker",
 	"type": "typo3-cms-extension",
-	"description": "Track page views reliably using a pixel",
+	"description": "Reliably track page views in TYPO3",
 	"license": "GPL-2.0-or-later",
 	"require": {
 		"php": "^8.2",

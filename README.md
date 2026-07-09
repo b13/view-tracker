@@ -19,7 +19,7 @@ if you want to track language versions separately.
 ### Option 1: `<img>` tag
 
 ```html
-<img src="/_pixel?page={data.uid}" style="position: fixed; z-index: -1000;" loading="eager" alt="" />
+<img src="/_b13vt?page={data.uid}" style="position: fixed; z-index: -1000;" loading="eager" alt="" />
 ```
 
 ### Option 2: ViewHelper (recommended)
@@ -89,6 +89,36 @@ Behaviour matrix (non-admin users):
 
 By default, views are written to the `tx_view_tracker_count` database table.
 An empty Redis implementation is provided as an example for alternative storage.
+
+### Tracking Endpoint
+
+The middleware listens on `/_b13vt` by default. The path is deliberately
+opaque so common tracker blocklists (EasyPrivacy etc.) don't catch it. If a
+blocklist eventually picks it up, override the path per site — both the
+middleware and the ViewHelper read from the same site setting.
+
+Import the site set in your `config/sites/<id>/config.yaml`:
+
+```yaml
+dependencies:
+  - b13/view-tracker
+```
+
+Then override in `config/sites/<id>/settings.yaml`:
+
+```yaml
+view_tracker:
+  endpoint: '/_yourpath'
+```
+
+After changing the value, flush TYPO3 caches so the ViewHelper re-renders.
+
+## Upgrading from 1.0
+
+The tracking endpoint moved from `/_pixel` to `/_b13vt`. If your templates use
+the `<vt:pixel />` ViewHelper, just flush caches — the new URL is emitted
+automatically. If you copied the raw `<img src="/_pixel?…">` snippet into a
+template, update the path manually (or switch to the ViewHelper).
 
 ## Privacy
 

@@ -23,11 +23,11 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Psr\Log\LoggerInterface;
 use TYPO3\CMS\Core\Http\StreamFactory;
+use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 final readonly class TrackViewMiddleware implements MiddlewareInterface
 {
-    public const TARGET = '/_pixel';
     public const PIXEL_PATH = 'EXT:view_tracker/Resources/Private/Image/pixel.png';
 
     public function __construct(
@@ -40,7 +40,13 @@ final readonly class TrackViewMiddleware implements MiddlewareInterface
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        if ($request->getUri()->getPath() === self::TARGET && ($request->getQueryParams()['page'] ?? false)) {
+        $site = $request->getAttribute('site');
+        if (!$site instanceof Site) {
+            // No site context — nothing to track.
+            return $handler->handle($request);
+        }
+        $endpoint = (string)$site->getSettings()->get('view_tracker.endpoint', '/_b13vt');
+        if ($request->getUri()->getPath() === $endpoint && ($request->getQueryParams()['page'] ?? false)) {
             if (!isset($request->getCookieParams()['be_typo_user'])) {
                 $pageId = (int)$request->getQueryParams()['page'];
                 $pageType = (int)($request->getQueryParams()['type'] ?? 0);

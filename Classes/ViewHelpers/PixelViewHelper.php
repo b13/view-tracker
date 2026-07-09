@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace B13\ViewTracker\ViewHelpers;
 
 use Psr\Http\Message\ServerRequestInterface;
+use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Frontend\Page\PageInformation;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
 
@@ -47,7 +48,11 @@ final class PixelViewHelper extends AbstractViewHelper
         if (!$pageId) {
             return '';
         }
-        $src = '/_pixel?page=' . (int)$pageId;
+        $site = $request->getAttribute('site');
+        $endpoint = $site instanceof Site
+            ? (string)$site->getSettings()->get('view_tracker.endpoint', '/_b13vt')
+            : '/_b13vt';
+        $src = $endpoint . '?page=' . (int)$pageId;
         $type = $request->getAttribute('routing')?->getPageType();
         if ($type) {
             $src .= '&amp;type=' . $type;
