@@ -9,7 +9,8 @@
 	},
 	"extra": {
 		"typo3/cms": {
-			"extension-key": "view_tracker"
+			"extension-key": "view_tracker",
+			"version": "1.1.2"
 		}
 	},
 	"autoload": {
