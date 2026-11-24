@@ -66,11 +66,11 @@ final readonly class TrackViewMiddleware implements MiddlewareInterface
 
                 $this->statisticsService->addView($trackingData);
 
-                $this->logger->info('Page view tracked', [
-                    'url' => $request->getHeaderLine('Referer'),
+                // Never log request headers (Referer, User-Agent) or the client IP:
+                // the extension promises not to persist anything beyond the counted fields.
+                $this->logger->debug('Page view tracked', [
                     'pageId' => $pageId,
                     'pageType' => $pageType,
-                    'userAgent' => $request->getHeaderLine('User-Agent'),
                 ]);
             }
 
