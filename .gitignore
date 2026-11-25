@@ -1,3 +1,6 @@
 vendor/
+.Build/
 composer.lock
 .idea/
+.phpunit.cache/
+/var/
