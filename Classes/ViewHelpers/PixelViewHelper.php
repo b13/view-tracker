@@ -14,6 +14,9 @@ namespace B13\ViewTracker\ViewHelpers;
 
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Core\Site\Entity\Site;
+use TYPO3\CMS\Core\SystemResource\Publishing\SystemResourcePublisherInterface;
+use TYPO3\CMS\Core\SystemResource\SystemResourceFactory;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\PathUtility;
 use TYPO3\CMS\Frontend\Page\PageInformation;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
@@ -63,12 +66,20 @@ final class PixelViewHelper extends AbstractViewHelper
         $img = '<img src="' . $src . '" style="position: fixed; z-index: -1000;" alt="" role="presentation" width="1" height="1" loading="eager">';
         // The script adds the referring host name, which only the browser
         // knows. Without JavaScript the plain pixel is requested instead.
-        // TYPO3 v14 deprecates getPublicResourceWebPath() in favor of the
-        // system resource API, which v13 does not have yet.
-        $script = method_exists(PathUtility::class, 'getSystemResourceUri')
-            ? (string)PathUtility::getSystemResourceUri(self::SCRIPT_PATH, $request)
-            : PathUtility::getPublicResourceWebPath(self::SCRIPT_PATH);
-        return '<script src="' . htmlspecialchars($script) . '" data-src="' . $src . '" async></script>'
+        return '<script src="' . htmlspecialchars($this->getScriptUri($request)) . '" data-src="' . $src . '" async></script>'
             . '<noscript>' . $img . '</noscript>';
+    }
+
+    /**
+     * TYPO3 v14 deprecates getPublicResourceWebPath() in favor of the system
+     * resource API, which v13 does not have yet.
+     */
+    private function getScriptUri(ServerRequestInterface $request): string
+    {
+        if (!interface_exists(SystemResourcePublisherInterface::class)) {
+            return PathUtility::getPublicResourceWebPath(self::SCRIPT_PATH);
+        }
+        $resource = GeneralUtility::makeInstance(SystemResourceFactory::class)->createPublicResource(self::SCRIPT_PATH);
+        return (string)GeneralUtility::makeInstance(SystemResourcePublisherInterface::class)->generateUri($resource, $request);
     }
 }
