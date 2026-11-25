@@ -39,6 +39,7 @@ class DatabaseStorage implements StorageInterface
                 'os' => $trackingData->os,
                 'device_type' => $trackingData->deviceType,
                 'country' => $trackingData->country,
+                'referrer' => $trackingData->referrer,
             ],
             [
                 'page' => ParameterType::INTEGER,
@@ -49,6 +50,7 @@ class DatabaseStorage implements StorageInterface
                 'os' => ParameterType::STRING,
                 'device_type' => ParameterType::STRING,
                 'country' => ParameterType::STRING,
+                'referrer' => ParameterType::STRING,
             ]
         );
     }

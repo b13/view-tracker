@@ -19,6 +19,7 @@ class TrackingData
     public string $os = '';
     public string $deviceType = '';
     public string $country = '';
+    public string $referrer = '';
     public bool $skipTracking = false;
 
     public function __construct(

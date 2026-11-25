@@ -24,7 +24,11 @@ if you want to track language versions separately.
 
 ### Option 2: ViewHelper (recommended)
 
-The ViewHelper automatically includes the correct page ID, language, and page type:
+The ViewHelper automatically includes the correct page ID, language, and page type.
+It renders a small script that requests the pixel and passes along the host
+name of the referring page (see [Privacy](#privacy)), with the plain pixel in a
+`<noscript>` fallback. The plain `<img>` tag from option 1 cannot know the
+referring page, so all its views count as "unknown origin" in View Tracker Pro.
 
 ```html
 <html xmlns:vt="http://typo3.org/ns/B13/ViewTracker/ViewHelpers"
@@ -129,20 +133,24 @@ packages:
 
 | Package | Stored per view | Read from the request, then discarded |
 |---|---|---|
-| `b13/view-tracker` | page ID, page type, primary browser language (e.g. `de-de`), timestamp | `User-Agent` (to skip obvious bots) |
-| `b13/view-tracker-pro` | browser name, operating system name, device type (no versions) | `User-Agent` (parsed, then discarded) |
+| `b13/view-tracker` | page ID, page type, primary browser language (e.g. `de-de`), timestamp | `User-Agent` (to skip obvious bots), host name of the referring page (ignored without the Pro package) |
+| `b13/view-tracker-pro` | browser name, operating system name, device type (no versions), host name of the referring page (e.g. `www.google.com`), or "internal" / "unknown" | `User-Agent` (parsed, then discarded) |
 | `b13/view-tracker-geoip` | country code (e.g. `DE`) | client IP address (looked up in a local database, never stored or sent anywhere) |
 | `b13/view-tracker-cdn-country` | country code (e.g. `DE`) | country header set by the CDN (no IP address involved) |
 
 Without the Pro package and a country package, the columns `browser`, `os`,
-`device_type` and `country` stay empty.
+`device_type`, `country` and `referrer` stay empty.
+
+The referring page is known only to the browser. The pixel script reduces it
+to the host name before sending it, so the path, query string and fragment of
+the referring URL never reach the server.
 
 What View Tracker does **not** do:
 
 - set or read cookies, local storage or any other identifier in the browser
   (it only checks whether a TYPO3 backend session cookie is present, so that
   editors are not counted)
-- store IP addresses, the full `User-Agent` string or the referrer
+- store IP addresses, the full `User-Agent` string or the full referrer URL
 - write request headers or IP addresses to the TYPO3 log; a counted view
   produces at most a `debug` entry with page ID and page type
 - link two page views to the same visitor
@@ -154,9 +162,10 @@ Suggested wording for a privacy policy (adapt it to the installed packages):
 
 > We count page views on this website with the TYPO3 extension View Tracker.
 > For each page view, we store the page, the time, the browser language and,
-> where applicable, the browser, the operating system, the device type and the
-> country. We do not set cookies, do not store IP addresses and cannot link
-> page views to a person or to each other. The data is processed on our own
+> where applicable, the browser, the operating system, the device type, the
+> country and the domain of the website that linked to the page. We do not
+> set cookies, do not store IP addresses and cannot link page views to a
+> person or to each other. The data is processed on our own
 > server and is not passed on to third parties.
 
 ## License
