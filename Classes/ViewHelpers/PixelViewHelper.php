@@ -14,6 +14,7 @@ namespace B13\ViewTracker\ViewHelpers;
 
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Core\Site\Entity\Site;
+use TYPO3\CMS\Core\Utility\PathUtility;
 use TYPO3\CMS\Frontend\Page\PageInformation;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
 
@@ -33,6 +34,8 @@ use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
  */
 final class PixelViewHelper extends AbstractViewHelper
 {
+    private const SCRIPT_PATH = 'EXT:view_tracker/Resources/Public/JavaScript/b13vt.js';
+
     protected $escapeOutput = false;
 
     public function render()
@@ -57,6 +60,11 @@ final class PixelViewHelper extends AbstractViewHelper
         if ($type) {
             $src .= '&amp;type=' . $type;
         }
-        return '<img src="' . $src . '" style="position: fixed; z-index: -1000;" alt="" role="presentation" width="1" height="1" loading="eager">';
+        $img = '<img src="' . $src . '" style="position: fixed; z-index: -1000;" alt="" role="presentation" width="1" height="1" loading="eager">';
+        // The script adds the referring host name, which only the browser
+        // knows. Without JavaScript the plain pixel is requested instead.
+        $script = PathUtility::getPublicResourceWebPath(self::SCRIPT_PATH);
+        return '<script src="' . htmlspecialchars($script) . '" data-src="' . $src . '" async></script>'
+            . '<noscript>' . $img . '</noscript>';
     }
 }
