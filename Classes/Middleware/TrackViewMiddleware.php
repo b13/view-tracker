@@ -29,6 +29,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 final readonly class TrackViewMiddleware implements MiddlewareInterface
 {
     public const PIXEL_PATH = 'EXT:view_tracker/Resources/Private/Image/pixel.png';
+    private const LANGUAGE_MAX_LENGTH = 10;
 
     public function __construct(
         protected StatisticsService $statisticsService,
@@ -122,6 +123,13 @@ final readonly class TrackViewMiddleware implements MiddlewareInterface
         if ($language === false) {
             return '';
         }
-        return strtolower(trim($language));
+        $language = strtolower(trim($language));
+        // The header is client input: keep only well-formed tags that fit
+        // the column, an oversized value would fail the insert on strict
+        // databases.
+        if (strlen($language) > self::LANGUAGE_MAX_LENGTH || !preg_match('/^[a-z]{1,8}(-[a-z0-9]{1,8})*$/', $language)) {
+            return '';
+        }
+        return $language;
     }
 }
