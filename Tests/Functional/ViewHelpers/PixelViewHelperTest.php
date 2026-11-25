@@ -41,6 +41,14 @@ final class PixelViewHelperTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function scriptUrlChangesWithTheScript(): void
+    {
+        // Browsers keep JavaScript for a long time; without a version in
+        // the URL a changed script would not reach visitors.
+        self::assertMatchesRegularExpression('#src="[^"]*b13vt\.js\?[^"]+"#', $this->render(['uid' => 12], '0'));
+    }
+
+    #[Test]
     public function localizedPageIdAndPageTypeAreUsed(): void
     {
         $output = $this->render(['uid' => 12, '_LOCALIZED_UID' => 34], '7');
