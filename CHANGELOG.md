@@ -39,10 +39,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **Pixel requests on sites with prefixed languages.** The tracking
-  middleware now runs after the site resolver. On sites where every language
-  has a path prefix (for example `/de/` and `/en/`), the pixel answered with
-  a 404 and no view was counted.
+- **Pixel requests that never reached the counting.** The tracking
+  middleware was only ordered before the eID handler, so depending on the
+  other installed middlewares it could run before the site resolver. Then
+  the pixel answered with a 404 and no view was counted, most visibly on
+  sites where every language has a path prefix (for example `/de/` and
+  `/en/`). The middleware now runs after the site resolver.
 - **Overlong `Accept-Language` headers.** Only well-formed language tags that
   fit the column are stored. A longer value made the insert fail on MySQL,
   MariaDB, and PostgreSQL in strict mode, so the view was lost.
