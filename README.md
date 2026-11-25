@@ -152,7 +152,7 @@ packages:
 | Package | Stored per view | Read from the request, then discarded |
 |---|---|---|
 | `b13/view-tracker` | page ID, page type, primary browser language (e.g. `de-de`), timestamp | `User-Agent` (to skip obvious bots), host name of the referring page (ignored without the Pro package) |
-| `b13/view-tracker-pro` | browser name, operating system name, device type (no versions), host name of the referring page without `www.` (e.g. `google.com`), or "internal" / "unknown" | `User-Agent` (parsed, then discarded) |
+| `b13/view-tracker-pro` | browser name, operating system name, device type (no versions), host name of the referring page without `www.` (e.g. `google.com`), or `(internal)` / `(unknown)` | `User-Agent` (parsed, then discarded) |
 | `b13/view-tracker-geoip` | country code (e.g. `DE`) | client IP address (looked up in a local database, never stored or sent anywhere) |
 | `b13/view-tracker-cdn-country` | country code (e.g. `DE`) | country header set by the CDN (no IP address involved) |
 
