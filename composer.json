@@ -3,18 +3,67 @@
 	"type": "typo3-cms-extension",
 	"description": "Reliably track page views in TYPO3",
 	"license": "GPL-2.0-or-later",
+	"keywords": [
+		"TYPO3",
+		"extension",
+		"statistics",
+		"page views",
+		"privacy"
+	],
+	"homepage": "https://b13.com",
+	"authors": [
+		{
+			"name": "b13 GmbH",
+			"homepage": "https://b13.com"
+		}
+	],
+	"support": {
+		"email": "typo3@b13.com",
+		"issues": "https://github.com/b13/view-tracker/issues",
+		"source": "https://github.com/b13/view-tracker"
+	},
 	"require": {
 		"php": "^8.2",
-		"typo3/cms-core": "^13 || ^14"
+		"typo3/cms-backend": "^13.4 || ^14",
+		"typo3/cms-core": "^13.4 || ^14",
+		"typo3/cms-extbase": "^13.4 || ^14",
+		"typo3/cms-fluid": "^13.4 || ^14",
+		"typo3/cms-frontend": "^13.4 || ^14"
+	},
+	"require-dev": {
+		"typo3/testing-framework": "^9.1",
+		"phpunit/phpunit": "^11.3"
 	},
 	"extra": {
 		"typo3/cms": {
-			"extension-key": "view_tracker"
+			"extension-key": "view_tracker",
+			"version": "1.1.1",
+			"web-dir": ".Build/public",
+			"Package": {
+				"providesPackages": {}
+			}
 		}
 	},
 	"autoload": {
 		"psr-4": {
 			"B13\\ViewTracker\\": "Classes/"
 		}
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"B13\\ViewTracker\\Tests\\": "Tests/"
+		}
+	},
+	"config": {
+		"vendor-dir": ".Build/vendor",
+		"bin-dir": ".Build/bin",
+		"allow-plugins": {
+			"typo3/class-alias-loader": true,
+			"typo3/cms-composer-installers": true
+		}
+	},
+	"scripts": {
+		"test:unit": "phpunit -c Build/phpunit/UnitTests.xml",
+		"test:functional": "phpunit -c Build/phpunit/FunctionalTests.xml"
 	}
 }
