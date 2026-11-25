@@ -17,9 +17,9 @@ use B13\ViewTracker\DTO\LastSevenDaysPeriod;
 use B13\ViewTracker\DTO\LastThirtyDaysPeriod;
 use B13\ViewTracker\DTO\LastTwelveMonthsPeriod;
 use B13\ViewTracker\DTO\PeriodInterface;
+use B13\ViewTracker\Security\PageModuleStatisticsVisibility;
 use B13\ViewTracker\Service\StatisticsService;
 use Doctrine\DBAL\ParameterType;
-use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Backend\Controller\Event\ModifyPageLayoutContentEvent;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Attribute\AsEventListener;
@@ -39,7 +39,7 @@ use TYPO3\CMS\Fluid\View\FluidViewAdapter;
 use TYPO3\CMS\Fluid\View\TemplatePaths;
 
 #[AsEventListener(
-    identifier: 'my-extension/backend/modify-page-module-content',
+    identifier: 'b13-view-tracker/page-module-statistics',
 )]
 final class PageModuleStatisticsListener
 {
@@ -52,6 +52,7 @@ final class PageModuleStatisticsListener
         private readonly ViewFactoryInterface $viewFactory,
         private readonly ExtensionConfiguration $extensionConfiguration,
         private readonly Context $context,
+        private readonly PageModuleStatisticsVisibility $visibility,
     ) {
         $user = $GLOBALS['BE_USER'];
         if ($user->user['lang'] ?? false) {
@@ -63,7 +64,8 @@ final class PageModuleStatisticsListener
 
     public function __invoke(ModifyPageLayoutContentEvent $event): void
     {
-        if (!$this->isVisibleToCurrentUser($event->getRequest())) {
+        $user = $this->context->getAspect('backend.user');
+        if (!$user instanceof UserAspect || !$this->visibility->isVisible($user, $event->getRequest()->getAttribute('site'))) {
             return;
         }
 
@@ -120,47 +122,6 @@ final class PageModuleStatisticsListener
 
             $event->addHeaderContent($view->render('Header'));
         }
-    }
-
-    /**
-     * Gate the widget by BE user role + site setting. Admins always see it.
-     * Defaults preserve backwards compatibility: every non-admin sees it.
-     */
-    private function isVisibleToCurrentUser(ServerRequestInterface $request): bool
-    {
-        $userAspect = $this->context->getAspect('backend.user');
-        if (!$userAspect instanceof UserAspect || !$userAspect->isLoggedIn()) {
-            return false;
-        }
-        if ($userAspect->isAdmin()) {
-            return true;
-        }
-
-        $site = $request->getAttribute('site');
-        if (!$site instanceof Site) {
-            // No site context (rare in the Page module) — fall back to hidden.
-            return false;
-        }
-        $settings = $site->getSettings();
-
-        if ((bool)$settings->get('view_tracker.pageModuleStatistics.visibleForAdminsOnly', false)) {
-            return false;
-        }
-
-        $visibleForGroups = (string)$settings->get('view_tracker.pageModuleStatistics.visibleForGroups', '');
-        if ($visibleForGroups === '') {
-            return true;
-        }
-
-        $allowedGroupIds = array_filter(array_map(
-            'intval',
-            array_map('trim', explode(',', $visibleForGroups))
-        ));
-        if ($allowedGroupIds === []) {
-            return true;
-        }
-
-        return array_intersect($allowedGroupIds, $userAspect->getGroupIds()) !== [];
     }
 
     protected function getPageIdsForAllLanguages(int $pageId, array $languages): array
