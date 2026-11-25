@@ -46,6 +46,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Overlong `Accept-Language` headers.** Only well-formed language tags that
   fit the column are stored. A longer value made the insert fail on MySQL,
   MariaDB, and PostgreSQL in strict mode, so the view was lost.
+- **Views from devices with long type names.** The `device_type` column
+  holds 30 characters instead of 20. Device types like "portable media
+  player" (for example an iPod touch) made the insert fail on strict
+  databases. Requires a database schema update.
 - **No deprecation notice on TYPO3 v14.** The ViewHelper uses the system
   resource API for the script URL where it is available.
 
