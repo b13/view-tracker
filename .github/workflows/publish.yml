@@ -8,7 +8,6 @@ on:
 jobs:
   publish:
     name: Publish new version to TER
-    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     env:
       TYPO3_API_TOKEN: ${{ secrets.TYPO3_API_TOKEN }}
@@ -16,23 +15,33 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          # The annotated tag message becomes the TER upload comment.
+          fetch-depth: 0
 
       - name: Check tag
+        id: get-version
         run: |
-          if ! [[ ${{ github.ref }} =~ ^refs/tags/[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}$ ]]; then
+          version="${GITHUB_REF#refs/tags/}"
+          if ! [[ "$version" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+            echo "Tag $version is no version number, nothing to publish."
             exit 1
           fi
-
-      - name: Get version
-        id: get-version
-        run: echo "version=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+          declared=$(php -r 'echo json_decode(file_get_contents("composer.json"), true)["extra"]["typo3/cms"]["version"] ?? "";')
+          if [[ "$declared" != "$version" ]]; then
+            echo "Tag $version does not match the version $declared in composer.json."
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Get comment
         id: get-comment
+        env:
+          VERSION: ${{ steps.get-version.outputs.version }}
         run: |
-          comment=$(git tag -n10 -l "${{ steps.get-version.outputs.version }}" | sed "s/^[0-9.]*[ ]*//g")
+          comment=$(git tag -n10 -l "$VERSION" | sed "s/^[0-9.]*[ ]*//g")
           if [[ -z "${comment// }" ]]; then
-            comment="Released version ${{ steps.get-version.outputs.version }}"
+            comment="Released version $VERSION"
           fi
           {
             echo "comment<<EOF"
@@ -47,7 +56,10 @@ jobs:
           extensions: intl, mbstring, json, zip, curl
 
       - name: Install tailor
-        run: composer global require typo3/tailor --prefer-dist --no-progress --no-suggest
+        run: composer global require typo3/tailor --prefer-dist --no-progress
 
       - name: Publish to TER
-        run: php ~/.composer/vendor/bin/tailor ter:publish --comment "${{ steps.get-comment.outputs.comment }}" ${{ steps.get-version.outputs.version }}
+        env:
+          VERSION: ${{ steps.get-version.outputs.version }}
+          COMMENT: ${{ steps.get-comment.outputs.comment }}
+        run: php ~/.composer/vendor/bin/tailor ter:publish --comment "$COMMENT" "$VERSION"
