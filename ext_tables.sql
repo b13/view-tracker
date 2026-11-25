@@ -5,7 +5,7 @@ CREATE TABLE tx_view_tracker_count (
 	language varchar(10) DEFAULT '' NOT NULL,
 	browser varchar(50) DEFAULT '' NOT NULL,
 	os varchar(50) DEFAULT '' NOT NULL,
-	device_type varchar(20) DEFAULT '' NOT NULL,
+	device_type varchar(30) DEFAULT '' NOT NULL,
 	country varchar(10) DEFAULT '' NOT NULL,
 	referrer varchar(100) DEFAULT '' NOT NULL,
 	KEY page (page),
