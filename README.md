@@ -3,7 +3,13 @@
 Track page views reliably using a 1x1 pixel that bypasses caching.
 
 For dashboard widgets, analytics, and data aggregation, see
-[View Tracker Pro](https://github.com/b13/view-tracker-pro).
+[View Tracker Pro](https://b13.com/extensions?utm_source=view_tracker&utm_medium=readme).
+
+## Compatibility
+
+TYPO3 v13.4 and v14, PHP 8.2 or newer.
+
+Release notes live in [CHANGELOG.md](CHANGELOG.md).
 
 ## Installation
 
@@ -49,11 +55,22 @@ months, and views by page type.
 ### Excluded Page Doktypes
 
 By default, view statistics are not shown for non-content page types (folders,
-shortcuts, external links, etc.). You can extend the exclusion list:
+shortcuts, external links, etc.). A configured list replaces the defaults, so
+repeat them if you only want to add a doktype:
 
 ```php
 // ext_localconf.php
-$GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['view_tracker']['excludedDoktypes'][] = 116;
+use TYPO3\CMS\Core\Domain\Repository\PageRepository;
+
+$GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['view_tracker']['excludedDoktypes'] = [
+    PageRepository::DOKTYPE_LINK,
+    PageRepository::DOKTYPE_SHORTCUT,
+    PageRepository::DOKTYPE_BE_USER_SECTION,
+    PageRepository::DOKTYPE_MOUNTPOINT,
+    PageRepository::DOKTYPE_SPACER,
+    PageRepository::DOKTYPE_SYSFOLDER,
+    116,
+];
 ```
 
 ### Page-module statistics visibility
@@ -91,8 +108,9 @@ Behaviour matrix (non-admin users):
 
 ### Storage Type
 
-By default, views are written to the `tx_view_tracker_count` database table.
-An empty Redis implementation is provided as an example for alternative storage.
+Views are written to the `tx_view_tracker_count` database table. To store them
+elsewhere, implement `B13\ViewTracker\Storage\StorageInterface` and point the
+service `b13viewTracker.storage` to your class in your own `Services.yaml`.
 
 ### Tracking Endpoint
 
@@ -134,7 +152,7 @@ packages:
 | Package | Stored per view | Read from the request, then discarded |
 |---|---|---|
 | `b13/view-tracker` | page ID, page type, primary browser language (e.g. `de-de`), timestamp | `User-Agent` (to skip obvious bots), host name of the referring page (ignored without the Pro package) |
-| `b13/view-tracker-pro` | browser name, operating system name, device type (no versions), host name of the referring page (e.g. `www.google.com`), or "internal" / "unknown" | `User-Agent` (parsed, then discarded) |
+| `b13/view-tracker-pro` | browser name, operating system name, device type (no versions), host name of the referring page without `www.` (e.g. `google.com`), or "internal" / "unknown" | `User-Agent` (parsed, then discarded) |
 | `b13/view-tracker-geoip` | country code (e.g. `DE`) | client IP address (looked up in a local database, never stored or sent anywhere) |
 | `b13/view-tracker-cdn-country` | country code (e.g. `DE`) | country header set by the CDN (no IP address involved) |
 
@@ -168,21 +186,32 @@ Suggested wording for a privacy policy (adapt it to the installed packages):
 > person or to each other. The data is processed on our own
 > server and is not passed on to third parties.
 
+## Running the Tests
+
+```bash
+composer install
+composer test:unit
+composer test:functional
+```
+
+The functional tests use SQLite by default and need no database server.
+
 ## License
 
 GPL-2.0-or-later — see the [LICENSE](LICENSE) file for details.
 
 ## Related Extensions
 
-- **[View Tracker Pro](https://b13.com)** — dashboard widgets, data aggregation, and server-side analytics (browser, OS, device type detection)
-- **[View Tracker CDN Country](https://github.com/b13/view-tracker-cdn-country)** — country detection via CDN headers (Cloudflare, Fastly, etc.)
-- **[View Tracker GeoIP](https://b13.com)** — country detection via MaxMind GeoIP database
+- **[View Tracker Pro](https://b13.com/extensions?utm_source=view_tracker&utm_medium=readme)**—dashboard widgets, data aggregation, and server-side analytics (browser, operating system, device type, and origin of the visit)
+- **[View Tracker CDN Country](https://github.com/b13/view-tracker-cdn-country)**—country detection via CDN headers (Cloudflare, Fastly, CloudFront)
+- **[View Tracker GeoIP](https://github.com/b13/view-tracker-geoip)**—country detection via a local MaxMind GeoIP database
 
-Interested in View Tracker Pro or GeoIP? [Contact us](https://b13.com/about).
+## Credits
 
-## Background, authors & maintenance
+View Tracker was created by Johannes Schlier and is maintained by
+[b13 GmbH](https://b13.com), Stuttgart, Germany.
 
-This extension was created by Johannes Schlier in 2025 for [b13 GmbH, Stuttgart](https://b13.com).
-
-[Find more TYPO3 extensions we have developed](https://b13.com/useful-typo3-extensions-from-b13-to-you) that help us deliver value in client projects. As part of our work, 
-we focus on testing and best practices to ensure long-term performance, reliability, and results in all our code.
+[Find more TYPO3 extensions we have developed](https://b13.com/useful-typo3-extensions-from-b13-to-you?utm_source=view_tracker&utm_medium=readme)
+that help us deliver value in client projects. As part of our work, we focus on
+testing and best practices to ensure long-term performance, reliability, and
+results in all our code.
