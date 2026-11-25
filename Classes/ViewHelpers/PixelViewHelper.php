@@ -72,12 +72,15 @@ final class PixelViewHelper extends AbstractViewHelper
 
     /**
      * TYPO3 v14 deprecates getPublicResourceWebPath() in favor of the system
-     * resource API, which v13 does not have yet.
+     * resource API, which v13 does not have yet. The v14 API adds a cache
+     * busting parameter; on v13 the file time is appended by hand, as
+     * browsers may keep JavaScript for a year.
      */
     private function getScriptUri(ServerRequestInterface $request): string
     {
         if (!interface_exists(SystemResourcePublisherInterface::class)) {
-            return PathUtility::getPublicResourceWebPath(self::SCRIPT_PATH);
+            $modified = @filemtime(GeneralUtility::getFileAbsFileName(self::SCRIPT_PATH));
+            return PathUtility::getPublicResourceWebPath(self::SCRIPT_PATH) . ($modified ? '?' . $modified : '');
         }
         $resource = GeneralUtility::makeInstance(SystemResourceFactory::class)->createPublicResource(self::SCRIPT_PATH);
         return (string)GeneralUtility::makeInstance(SystemResourcePublisherInterface::class)->generateUri($resource, $request);
