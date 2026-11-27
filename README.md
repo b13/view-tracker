@@ -220,7 +220,7 @@ GPL-2.0-or-later — see the [LICENSE](LICENSE) file for details.
 ## Credits
 
 View Tracker was created by Johannes Schlier and David Steeb and is maintained
-by [b13 GmbH](https://b13.com), Stuttgart, Germany.
+by [b13 GmbH](https://b13.com/?utm_source=view_tracker&utm_medium=readme), Stuttgart, Germany.
 
 [Find more TYPO3 extensions we have developed](https://b13.com/useful-typo3-extensions-from-b13-to-you?utm_source=view_tracker&utm_medium=readme)
 that help us deliver value in client projects. As part of our work, we focus on
