@@ -32,9 +32,11 @@ if you want to track language versions separately.
 
 The ViewHelper automatically includes the correct page ID, language, and page type.
 It renders a small script that requests the pixel and passes along the host
-name of the referring page (see [Privacy](#privacy)), with the plain pixel in a
-`<noscript>` fallback. The plain `<img>` tag from option 1 cannot know the
-referring page, so all its views count as "unknown origin" in View Tracker Pro.
+name of the referring page and the campaign parameters of the current page
+(see [Privacy](#privacy)), with the plain pixel in a `<noscript>` fallback. The
+plain `<img>` tag from option 1 cannot know the referring page or the
+campaign, so all its views count as "unknown origin" and without campaign in
+View Tracker Pro.
 
 ```html
 <html xmlns:vt="http://typo3.org/ns/B13/ViewTracker/ViewHelpers"
@@ -151,17 +153,25 @@ packages:
 
 | Package | Stored per view | Read from the request, then discarded |
 |---|---|---|
-| `b13/view-tracker` | page ID, page type, primary browser language (e.g. `de-de`), timestamp | `User-Agent` (to skip obvious bots), host name of the referring page (ignored without the Pro package) |
-| `b13/view-tracker-pro` | browser name, operating system name, device type (no versions), host name of the referring page without `www.` (e.g. `google.com`), or `(internal)` / `(unknown)` | `User-Agent` (parsed, then discarded) |
+| `b13/view-tracker` | page ID, page type, primary browser language (e.g. `de-de`), timestamp | `User-Agent` (to skip obvious bots), host name of the referring page and campaign parameters (both ignored without the Pro package) |
+| `b13/view-tracker-pro` | browser name, operating system name, device type (no versions), host name of the referring page without `www.` (e.g. `google.com`), or `(internal)` / `(unknown)`, campaign parameters `utm_source`, `utm_medium`, `utm_campaign` in a normalized form (e.g. `newsletter`) | `User-Agent` (parsed, then discarded) |
 | `b13/view-tracker-geoip` | country code (e.g. `DE`) | client IP address (looked up in a local database, never stored or sent anywhere) |
 | `b13/view-tracker-cdn-country` | country code (e.g. `DE`) | country header set by the CDN (no IP address involved) |
 
 Without the Pro package and a country package, the columns `browser`, `os`,
-`device_type`, `country` and `referrer` stay empty.
+`device_type`, `country`, `referrer`, `utm_source`, `utm_medium` and
+`utm_campaign` stay empty.
 
 The referring page is known only to the browser. The pixel script reduces it
 to the host name before sending it, so the path, query string and fragment of
 the referring URL never reach the server.
+
+Campaign parameters are the `utm_source`, `utm_medium` and `utm_campaign`
+values in the address of the tracked page, set by whoever wrote the link (a
+newsletter, an ad). The pixel script passes on only these three, never the
+rest of the query string. They describe the link, not the visitor, as long as
+links do not carry personal identifiers such as a recipient ID in
+`utm_campaign`.
 
 What View Tracker does **not** do:
 
@@ -181,7 +191,8 @@ Suggested wording for a privacy policy (adapt it to the installed packages):
 > We count page views on this website with the TYPO3 extension View Tracker.
 > For each page view, we store the page, the time, the browser language and,
 > where applicable, the browser, the operating system, the device type, the
-> country and the domain of the website that linked to the page. We do not
+> country, the domain of the website that linked to the page and the campaign
+> named in the link (for example a newsletter). We do not
 > set cookies, do not store IP addresses and cannot link page views to a
 > person or to each other. The data is processed on our own
 > server and is not passed on to third parties.

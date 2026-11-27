@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Campaign parameters of a visit.** The pixel script now passes along
+  `utm_source`, `utm_medium`, and `utm_campaign` from the address of the
+  tracked page, and nothing else of its query string. The new columns
+  `utm_source`, `utm_medium`, and `utm_campaign` store them when View Tracker
+  Pro is installed; without it they stay empty. Requires a database schema
+  update.
+
 ## [1.2.0] — 2026-11-25
 
 ### Added

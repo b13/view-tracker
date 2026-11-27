@@ -39,6 +39,9 @@ final class DatabaseStorageTest extends FunctionalTestCase
         $data->deviceType = 'desktop';
         $data->country = 'GB';
         $data->referrer = 'example.org';
+        $data->utmSource = 'newsletter';
+        $data->utmMedium = 'email';
+        $data->utmCampaign = 'spring-sale';
 
         $this->subject->addView($data);
 
@@ -52,6 +55,9 @@ final class DatabaseStorageTest extends FunctionalTestCase
         self::assertSame('desktop', $row['device_type']);
         self::assertSame('GB', $row['country']);
         self::assertSame('example.org', $row['referrer']);
+        self::assertSame('newsletter', $row['utm_source']);
+        self::assertSame('email', $row['utm_medium']);
+        self::assertSame('spring-sale', $row['utm_campaign']);
     }
 
     #[Test]
