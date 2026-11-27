@@ -40,6 +40,9 @@ class DatabaseStorage implements StorageInterface
                 'device_type' => $trackingData->deviceType,
                 'country' => $trackingData->country,
                 'referrer' => $trackingData->referrer,
+                'utm_source' => $trackingData->utmSource,
+                'utm_medium' => $trackingData->utmMedium,
+                'utm_campaign' => $trackingData->utmCampaign,
             ],
             [
                 'page' => ParameterType::INTEGER,
@@ -51,6 +54,9 @@ class DatabaseStorage implements StorageInterface
                 'device_type' => ParameterType::STRING,
                 'country' => ParameterType::STRING,
                 'referrer' => ParameterType::STRING,
+                'utm_source' => ParameterType::STRING,
+                'utm_medium' => ParameterType::STRING,
+                'utm_campaign' => ParameterType::STRING,
             ]
         );
     }

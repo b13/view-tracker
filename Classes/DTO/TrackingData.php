@@ -20,6 +20,9 @@ class TrackingData
     public string $deviceType = '';
     public string $country = '';
     public string $referrer = '';
+    public string $utmSource = '';
+    public string $utmMedium = '';
+    public string $utmCampaign = '';
     public bool $skipTracking = false;
 
     public function __construct(
